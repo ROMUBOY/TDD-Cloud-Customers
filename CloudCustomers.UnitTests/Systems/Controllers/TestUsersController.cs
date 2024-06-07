@@ -1,6 +1,7 @@
 using CloudCustomers.API.Controllers;
 using CloudCustomers.API.Models;
 using CloudCustomers.API.Services;
+using CloudCustomers.UnitTests.Fixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -16,7 +17,7 @@ namespace CloudCustomers.UnitTests.Systems.Controllers
             var MockUserService = new Mock<IUsersService>();
             MockUserService
                 .Setup(service => service.GetAllUsers())
-                .ReturnsAsync(new List<User>());
+                .ReturnsAsync(UsersFixture.GetTestUsers());
 
             var sut = new UsersController(MockUserService.Object);
 
@@ -39,7 +40,7 @@ namespace CloudCustomers.UnitTests.Systems.Controllers
             var sut = new UsersController(MockUserService.Object);
 
             // Act
-            var result = (OkObjectResult)await sut.Get();
+            var result = await sut.Get();
 
             // Assert
             MockUserService.Verify(service => service.GetAllUsers(), Times.Once());
@@ -52,7 +53,7 @@ namespace CloudCustomers.UnitTests.Systems.Controllers
             var MockUserService = new Mock<IUsersService>();
             MockUserService
                 .Setup(service => service.GetAllUsers())
-                .ReturnsAsync(new List<User>());
+                .ReturnsAsync(UsersFixture.GetTestUsers());
 
             var sut = new UsersController(MockUserService.Object);
 
@@ -63,6 +64,25 @@ namespace CloudCustomers.UnitTests.Systems.Controllers
             // Assert
             result.Should().BeOfType<OkObjectResult>();
             objectResult.Value.Should().BeOfType<List<User>>();
+        }
+
+        [Fact]
+        public async void Get_OnSNoUsersFound_Returns404()
+        {
+            // Arrange
+            var MockUserService = new Mock<IUsersService>();
+            MockUserService
+                .Setup(service => service.GetAllUsers())
+                .ReturnsAsync(new List<User>());
+
+            var sut = new UsersController(MockUserService.Object);
+
+            // Act            
+            var result = await sut.Get();
+            
+            // Assert
+            result.Should().BeOfType<NotFoundResult>();
+            
         }
     }
 }
